@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ReefMind Beta — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .login-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  
+  .logo {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  
+  .logo h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  
+  .logo p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+  
+  .auth-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    animation: fadeUp 0.6s ease both;
+  }
+  
+  .divider {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin: 24px 0;
+    position: relative;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--border);
+  }
+  
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
+  
+  .footer-text {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 32px;
+  }
+  
+  .footer-text a {
+    color: var(--teal);
+    text-decoration: none;
+  }
+  
+  .footer-text a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-orbs">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<!-- Main container -->
+<div class="login-container">
+  
+  <!-- Logo -->
+  <div class="logo">
+    <h1>🐠 ReefMind</h1>
+    <p>AI-Powered Reef Diagnostics</p>
+  </div>
+  
+  <!-- Auth Card -->
+  <div class="auth-card">
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="signin">Sign In</button>
+      <button class="tab" data-tab="signup">Create Account</button>
+    </div>
+    
+    <!-- Sign In Form -->
+    <div class="tab-content active" id="signin">
+      <form id="signin-form">
+        <div class="form-group">
+          <label class="form-label" for="signin-email">Email</label>
+          <input 
+            type="email" 
+            id="signin-email" 
+            class="form-input" 
+            placeholder="you@example.com" 
+            required 
+            autocomplete="email"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signin-password">Password</label>
+          <input 
+            type="password" 
+            id="signin-password" 
+            class="form-input" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+          >
+        </div>
+        
+        <div id="signin-error" class="form-error"></div>
+        
+        <button type="submit" class="btn btn-primary btn-full">
+          Sign In
+        </button>
+      </form>
+    </div>
+    
+    <!-- Sign Up Form -->
+    <div class="tab-content" id="signup">
+      <form id="signup-form">
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Name</label>
+          <input 
+            type="text" 
+            id="signup-name" 
+            class="form-input" 
+            placeholder="Your name" 
+            required 
+            autocomplete="name"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email</label>
+          <input 
+            type="email" 
+            id="signup-email" 
+            class="form-input" 
+            placeholder="you@example.com" 
+            required 
+            autocomplete="email"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Password</label>
+          <input 
+            type="password" 
+            id="signup-password" 
+            class="form-input" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="new-password"
+            minlength="8"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="signup-confirm">Confirm Password</label>
+          <input 
+            type="password" 
+            id="signup-confirm" 
+            class="form-input" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="new-password"
+            minlength="8"
+          >
+        </div>
+        
+        <div id="signup-error" class="form-error"></div>
+        
+        <button type="submit" class="btn btn-primary btn-full">
+          Create Account
+        </button>
+      </form>
+    </div>
+    
+  </div>
+  
+  <!-- Footer -->
+  <div class="footer-text">
+    Beta Access · <a href="#">Privacy Policy</a> · <a href="#">Terms</a>
+  </div>
+  
+</div>
+
+<!-- Scripts -->
+<script src="app.js"></script>
+<script>
+// ================================================================
+// TAB SWITCHING
+// ================================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // Update tabs
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    
+    // Update content
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(tab.dataset.tab).classList.add('active');
+    
+    // Clear errors
+    ReefMind.UI.clearErrors();
+  });
+});
+
+// ================================================================
+// SIGN IN HANDLER
+// ================================================================
+document.getElementById('signin-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  
+  ReefMind.UI.hideError('signin-error');
+  ReefMind.UI.showLoading('Signing in...');
+  
+  const result = await ReefMind.API.login(email, password);
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!result.ok) {
+    ReefMind.UI.showError('signin-error', result.error || 'Sign in failed. Please try again.');
+    return;
+  }
+  
+  // Store auth
+  ReefMind.AppState.setAuth(result.data.user, result.data.token);
+  
+  // Check if user needs onboarding
+  const tanksResult = await ReefMind.API.getTanks();
+  
+  if (tanksResult.ok && tanksResult.data.tanks && tanksResult.data.tanks.length > 0) {
+    // Has tanks — go to dashboard
+    window.location.href = 'dashboard.html';
+  } else {
+    // No tanks — go to onboarding
+    window.location.href = 'onboarding.html';
+  }
+});
+
+// ================================================================
+// SIGN UP HANDLER
+// ================================================================
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const confirm = document.getElementById('signup-confirm').value;
+  
+  ReefMind.UI.hideError('signup-error');
+  
+  // Validation
+  if (password.length < 8) {
+    ReefMind.UI.showError('signup-error', 'Password must be at least 8 characters');
+    return;
+  }
+  
+  if (password !== confirm) {
+    ReefMind.UI.showError('signup-error', 'Passwords don\'t match');
+    return;
+  }
+  
+  ReefMind.UI.showLoading('Creating account...');
+  
+  const result = await ReefMind.API.register(name, email, password);
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!result.ok) {
+    const errorMsg = result.error === 'User already exists' 
+      ? 'That email is already registered' 
+      : result.error || 'Registration failed. Please try again.';
+    ReefMind.UI.showError('signup-error', errorMsg);
+    return;
+  }
+  
+  // Store auth
+  ReefMind.AppState.setAuth(result.data.user, result.data.token);
+  
+  // New user — go to onboarding
+  window.location.href = 'onboarding.html';
+});
+
+// ================================================================
+// AUTO-REDIRECT IF ALREADY SIGNED IN
+// ================================================================
+if (ReefMind.AppState.isAuthenticated()) {
+  window.location.href = 'dashboard.html';
+}
+</script>
+
+</body>
+</html>

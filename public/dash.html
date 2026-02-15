@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ReefMind Beta — Dashboard</title>
+<script src="chart.min.js"></script>
+<script src="chartjs-adapter-date-fns.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=1771035737">
+<style>
+  /* Chart wrapper */
+  .chart-wrapper {
+    margin-top: 16px;
+    height: 200px;
+    position: relative;
+  }
+  
+  .chart-caption {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border-left: 3px solid var(--teal);
+  }
+  
+  .chart-explainer {
+    margin-top: 8px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  
+  .explainer-toggle {
+    background: none;
+    border: none;
+    color: var(--teal);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .explainer-toggle:hover { opacity: 0.8; }
+  
+  .explainer-content {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin-top: 8px;
+    padding: 12px;
+    background: var(--teal-dim);
+    border-radius: 8px;
+    border: 1px solid rgba(0,212,170,0.2);
+    display: none;
+  }
+  
+  .explainer-content.active { display: block; }
+  
+  .pattern-callout {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(251,191,36,0.1);
+    border-left: 3px solid var(--yellow);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  /* Diagnosis panel */
+  .diagnosis-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s ease both;
+  }
+  
+  .diagnosis-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .diagnosis-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,212,170,0.3);
+  }
+  
+  .diagnosis-intro { flex: 1; }
+  
+  .diagnosis-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+  
+  .diagnosis-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  
+  .diagnosis-content {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  
+  /* Parameters grid */
+  .param-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .param-card {
+    background: var(--bg-deep);
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--teal);
+  }
+  
+  .param-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  
+  .param-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .param-unit {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+  
+  .param-status {
+    font-size: 0.7rem;
+    margin-top: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .status-good { color: var(--green); }
+  .status-low { color: var(--yellow); }
+  .status-high { color: var(--red); }
+  
+  /* Budget */
+  .budget-explainer {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--blue-dim);
+    border-radius: 8px;
+    border-left: 3px solid var(--blue);
+  }
+  
+  .budget-section {
+    margin-bottom: 16px;
+  }
+  
+  .budget-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  
+  .budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    padding-left: 12px;
+  }
+  
+  .budget-item .label { flex: 1; }
+  
+  .budget-item .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .budget-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid var(--border);
+  }
+  
+  .budget-total .value {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .budget-deficit { color: var(--red); }
+  .budget-surplus { color: var(--green); }
+  
+  /* Timeline */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .timeline-event {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-deep);
+    border-left: 3px solid var(--teal);
+    transition: background 0.2s;
+  }
+  
+  .timeline-event:hover {
+    background: rgba(0,212,170,0.04);
+  }
+  
+  .event-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--teal-dim);
+    border-radius: 8px;
+  }
+  
+  .event-content { flex: 1; }
+  
+  .event-date {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  
+  .event-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+  }
+  
+  .event-desc {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  
+  /* Section headers */
+  .section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin: 32px 0 16px;
+  }
+  
+  .section-header:first-child {
+    margin-top: 0;
+  }
+  
+  @media (max-width: 640px) {
+    .param-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .chart-wrapper {
+      height: 200px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-orbs">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>🐠 <span id="tank-name">ReefMind</span></h1>
+      <div class="subtitle">AI-Powered Reef Diagnostics</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="settings-btn" title="Settings">⚙️</button>
+      <button class="btn-icon" id="logout-btn" title="Logout">🚪</button>
+    </div>
+  </div>
+</header>
+
+<!-- Main container -->
+<div class="container">
+  
+  <!-- Current Parameters -->
+  <h2 class="section-header">Current Parameters</h2>
+  <div class="param-grid" id="param-grid">
+    <!-- Populated dynamically -->
+  </div>
+  
+  <!-- AI Diagnosis -->
+  <h2 class="section-header">AI Diagnosis</h2>
+  <div class="diagnosis-panel">
+    <div class="diagnosis-header">
+      <div class="diagnosis-avatar">🤖</div>
+      <div class="diagnosis-intro">
+        <div class="diagnosis-title">ReefMind Analysis</div>
+        <div class="diagnosis-subtitle" id="analysis-date">Ready to analyze</div>
+      </div>
+    </div>
+    
+    <div class="diagnosis-content" id="diagnosis-content">
+      Click "Analyze My Tank" below to get AI-powered insights based on your recent data.
+    </div>
+    
+    <button class="btn btn-primary" id="analyze-btn">
+      Analyze My Tank
+    </button>
+  </div>
+  
+  <!-- Alkalinity Trend -->
+  <h2 class="section-header">Alkalinity Trend</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">💧 Alkalinity (30 Days)</div>
+      <div class="card-badge badge-teal">PRIMARY</div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="alkTrendChart"></canvas>
+    </div>
+    <div class="chart-caption">
+      Your alkalinity over the last 30 days. The green band is your target range. Vertical lines mark when you changed something — look for the trend changing direction after each event.
+    </div>
+    <div class="chart-explainer">
+      <button class="explainer-toggle" onclick="toggleExplainer(this)">
+        What does this mean? ▼
+      </button>
+      <div class="explainer-content">
+        Alkalinity is how much acid your water can absorb before pH drops. Corals consume it to build skeletons. If it falls below 7.0, coral growth slows and tissue can recede. If it rises above 11, you risk <span class="jargon" data-tooltip="When calcium and alkalinity are both too high, they combine and 'crash out' of the water as calcium carbonate dust.">precipitation</span>.
+      </div>
+    </div>
+  </div>
+  
+  <!-- Ca + Alk Correlation -->
+  <h2 class="section-header">Ca + Alk Correlation</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📈 Calcium + Alkalinity Overlay</div>
+      <div class="card-badge badge-coral">DIAGNOSTIC</div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="correlationChart"></canvas>
+    </div>
+    <div class="chart-caption">
+      This overlays calcium and alkalinity to show how they move together. When both drop simultaneously, it's usually <span class="jargon" data-tooltip="When calcium and alkalinity are both too high, they combine and 'crash out' of the water.">precipitation</span>. When only alk drops, it points to biological consumption.
+    </div>
+    <div class="chart-explainer">
+      <button class="explainer-toggle" onclick="toggleExplainer(this)">
+        What does this mean? ▼
+      </button>
+      <div class="explainer-content">
+        Calcium and alkalinity are chemically linked. Corals consume both at roughly 20:1 ratio. When both fall together, it's precipitation. When only alk falls, it's biological consumption (bacteria, algae).
+      </div>
+    </div>
+  </div>
+  
+  <!-- Nutrient Trend -->
+  <h2 class="section-header">Nutrient Trend</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🧪 Nitrate + Phosphate</div>
+      <div class="card-badge badge-purple">NUTRIENTS</div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="nutrientChart"></canvas>
+    </div>
+    <div class="chart-caption">
+      Nitrate and phosphate levels over time. The shaded bands show healthy ranges. Rising nutrients mean increased input or decreased export. Falling nutrients can mean increased uptake or consumption.
+    </div>
+    <div class="chart-explainer">
+      <button class="explainer-toggle" onclick="toggleExplainer(this)">
+        What does this mean? ▼
+      </button>
+      <div class="explainer-content">
+        Corals need some nutrients (2-10 ppm NO3, 0.03-0.10 ppm PO4), but too much causes algae and tissue recession. Too little causes color loss.
+      </div>
+    </div>
+  </div>
+  
+  <!-- Alkalinity Budget -->
+  <h2 class="section-header">Alkalinity Budget</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📊 Dosing Analysis</div>
+      <div class="card-badge badge-teal">LIVE</div>
+    </div>
+    
+    <div class="budget-explainer">
+      💡 <strong>Think of alkalinity like a bank account.</strong> Input = deposits from dosing. Consumption = withdrawals from corals and bacteria. If withdrawals exceed deposits, alk drops.
+    </div>
+    
+    <div id="budget-content">
+      <div class="budget-section">
+        <div class="budget-label" style="color: var(--green);">⬆️ INPUT</div>
+        <div class="budget-item">
+          <div class="label">Dosing estimated</div>
+          <div class="value">~5.0 dKH/day</div>
+        </div>
+      </div>
+      
+      <div class="budget-section">
+        <div class="budget-label" style="color: var(--red);">⬇️ CONSUMPTION</div>
+        <div class="budget-item">
+          <div class="label">Coral growth + processes</div>
+          <div class="value">~4.8 dKH/day</div>
+        </div>
+      </div>
+      
+      <div class="budget-total budget-surplus">
+        <div>NET BALANCE</div>
+        <div class="value">+0.2 dKH/day</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- pH Trend -->
+  <h2 class="section-header">pH Trend</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🌊 pH (30 Days)</div>
+      <div class="card-badge badge-blue">STABILITY</div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="phChart"></canvas>
+    </div>
+    <div class="chart-caption">
+      Your pH over time. Reef tanks naturally cycle between ~8.1 at night and ~8.4 during the day (photosynthesis). Look for consistent daily patterns.
+    </div>
+  </div>
+  
+  <!-- Timeline -->
+  <h2 class="section-header">Recent Events</h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📅 Timeline</div>
+      <button class="btn btn-ghost" id="add-event-btn" style="padding: 8px 16px; min-height: auto;">
+        + Add Event
+      </button>
+    </div>
+    
+    <div class="timeline" id="timeline">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+  
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Event</div>
+      <button class="modal-close" onclick="closeEventModal()">×</button>
+    </div>
+    
+    <form id="event-form">
+      <div class="form-group">
+        <label class="form-label" for="event-type">Event Type</label>
+        <select id="event-type" class="form-select" required>
+          <option value="dosing-change">Dosing Change</option>
+          <option value="water-change">Water Change</option>
+          <option value="treatment">Treatment</option>
+          <option value="icp-result">ICP Result</option>
+          <option value="equipment-change">Equipment Change</option>
+          <option value="note">Note</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="event-date">Date</label>
+        <input type="date" id="event-date" class="form-input" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="event-title">Title</label>
+        <input type="text" id="event-title" class="form-input" placeholder="Brief description" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="event-details">Details (optional)</label>
+        <textarea id="event-details" class="form-textarea" placeholder="Additional information..."></textarea>
+      </div>
+      
+      <div id="event-error" class="form-error"></div>
+      
+      <div style="display: flex; gap: 12px;">
+        <button type="button" class="btn btn-secondary" onclick="closeEventModal()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          Save Event
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="app.js?v=1771035737"></script>
+<script>
+// ================================================================
+// AUTH & INIT
+// ================================================================
+if (!ReefMind.Nav.requireAuth()) {
+  // Will redirect
+}
+
+let tankData = null;
+let readings = [];
+let events = [];
+
+// ================================================================
+// LOAD DATA
+// ================================================================
+async function loadDashboard() {
+  ReefMind.UI.showLoading('Loading dashboard...');
+  
+  // Get user's tanks
+  const tanksResult = await ReefMind.API.getTanks();
+  
+  if (!tanksResult.ok || !tanksResult.data.tanks || tanksResult.data.tanks.length === 0) {
+    // No tanks — use mock data
+    console.log('No tanks found, using mock data');
+    tankData = ReefMind.MockData.tank;
+    readings = ReefMind.MockData.generateReadings(30);
+    events = ReefMind.MockData.events;
+  } else {
+    // Use first tank
+    const tank = tanksResult.data.tanks[0];
+    tankData = tank;
+    
+    // Load readings
+    const readingsResult = await ReefMind.API.getReadings(tank.id, 30);
+    if (readingsResult.ok && readingsResult.data.readings) {
+      readings = readingsResult.data.readings;
+    } else {
+      readings = ReefMind.MockData.generateReadings(30);
+    }
+    
+    // Load events
+    const eventsResult = await ReefMind.API.getEvents(tank.id);
+    if (eventsResult.ok && eventsResult.data.events) {
+      events = eventsResult.data.events;
+    } else {
+      events = ReefMind.MockData.events;
+    }
+  }
+  
+  ReefMind.UI.hideLoading();
+  
+  // Render everything
+  renderTankName();
+  renderParameters();
+  renderTimeline();
+  renderCharts();
+}
+
+// ================================================================
+// RENDER FUNCTIONS
+// ================================================================
+function renderTankName() {
+  document.getElementById('tank-name').textContent = tankData.name || 'ReefMind';
+}
+
+function renderParameters() {
+  const current = readings.length > 0 ? readings[0] : ReefMind.MockData.currentReadings;
+  const defaults = {
+    alk: { min: 7.5, max: 9.0 }, ca: { min: 380, max: 450 },
+    ph: { min: 7.8, max: 8.5 }, temp: { min: 76, max: 80 },
+    no3: { min: 2, max: 20 }, po4: { min: 0.03, max: 0.15 }
+  };
+  const t = tankData.targets || {};
+  const targets = {
+    alk: t.alk || defaults.alk, ca: t.ca || defaults.ca,
+    ph: t.ph || defaults.ph, temp: t.temp || defaults.temp,
+    no3: t.no3 || defaults.no3, po4: t.po4 || defaults.po4
+  };
+  
+  const params = [
+    { key: 'alk', label: 'Alkalinity', value: current.alk, target: targets.alk },
+    { key: 'ca', label: 'Calcium', value: current.ca, target: targets.ca },
+    { key: 'ph', label: 'pH', value: current.ph, target: targets.ph },
+    { key: 'temp', label: 'Temperature', value: current.temp, target: targets.temp },
+    { key: 'no3', label: 'Nitrate', value: current.no3, target: targets.no3 },
+    { key: 'po4', label: 'Phosphate', value: current.po4, target: targets.po4 }
+  ];
+  
+  const grid = document.getElementById('param-grid');
+  grid.innerHTML = params.map(p => {
+    const status = ReefMind.ParamUtils.getStatus(p.value, p.target.min, p.target.max);
+    const color = ReefMind.ParamUtils.getStatusColor(status);
+    const statusText = status === 'good' ? '✅ In Range' : 
+                       status === 'low' ? '⚠️ Low' : '⚠️ High';
+    
+    return `
+      <div class="param-card" style="border-left-color: ${color};">
+        <div class="param-label">${p.label}</div>
+        <div class="param-value">${ReefMind.ParamUtils.formatValue(p.key, p.value)}</div>
+        <div class="param-status status-${status}">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTimeline() {
+  const timelineDiv = document.getElementById('timeline');
+  
+  if (events.length === 0) {
+    timelineDiv.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 20px;">No events yet. Click "+ Add Event" to log changes.</div>';
+    return;
+  }
+  
+  timelineDiv.innerHTML = events.map(evt => {
+    const icon = evt.type === 'dosing-change' ? '💧' :
+                 evt.type === 'water-change' ? '🌊' :
+                 evt.type === 'treatment' ? '🧪' :
+                 evt.type === 'icp-result' ? '📊' :
+                 evt.type === 'equipment-change' ? '🔧' : '📝';
+    
+    return `
+      <div class="timeline-event">
+        <div class="event-icon">${icon}</div>
+        <div class="event-content">
+          <div class="event-date">${ReefMind.DateUtils.formatDate(evt.date)}</div>
+          <div class="event-title">${evt.title}</div>
+          ${evt.details ? `<div class="event-desc">${evt.details}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ================================================================
+// CHARTS
+// ================================================================
+function toggleExplainer(button) {
+  const content = button.nextElementSibling;
+  const isActive = content.classList.toggle('active');
+  button.textContent = isActive ? 'What does this mean? ▲' : 'What does this mean? ▼';
+}
+
+function renderCharts() {
+  const dates = readings.map(r => new Date(r.timestamp));
+  const defs = {
+    alk: { min: 7.5, max: 9.0 }, ca: { min: 380, max: 450 },
+    ph: { min: 7.8, max: 8.5 }, temp: { min: 76, max: 80 },
+    no3: { min: 2, max: 20 }, po4: { min: 0.03, max: 0.15 }
+  };
+  const tt = tankData.targets || {};
+  const targets = {
+    alk: tt.alk || defs.alk, ca: tt.ca || defs.ca,
+    ph: tt.ph || defs.ph, temp: tt.temp || defs.temp,
+    no3: tt.no3 || defs.no3, po4: tt.po4 || defs.po4
+  };
+  
+  // Alk Trend
+  new Chart(document.getElementById('alkTrendChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Alkalinity (dKH)',
+        data: readings.map(r => r.alk),
+        borderColor: '#00d4aa',
+        backgroundColor: 'rgba(0,212,170,0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 2,
+        pointHoverRadius: 6,
+        fill: false
+      }]
+    },
+    options: getChartOptions('Alkalinity (dKH)', targets.alk.min, targets.alk.max, '#00d4aa')
+  });
+  
+  // Ca + Alk Correlation
+  new Chart(document.getElementById('correlationChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: 'Calcium (mg/L)',
+          data: readings.map(r => r.ca),
+          borderColor: '#ff6b35',
+          borderWidth: 2,
+          tension: 0.3,
+          yAxisID: 'y-ca',
+          pointRadius: 2
+        },
+        {
+          label: 'Alkalinity (dKH)',
+          data: readings.map(r => r.alk),
+          borderColor: '#00d4aa',
+          borderWidth: 2,
+          tension: 0.3,
+          yAxisID: 'y-alk',
+          pointRadius: 2
+        }
+      ]
+    },
+    options: getDualAxisOptions()
+  });
+  
+  // Nutrients
+  new Chart(document.getElementById('nutrientChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: 'Nitrate (ppm)',
+          data: readings.map(r => r.no3),
+          borderColor: '#a78bfa',
+          borderWidth: 2,
+          tension: 0.3,
+          yAxisID: 'y-no3',
+          pointRadius: 2
+        },
+        {
+          label: 'Phosphate (ppm)',
+          data: readings.map(r => r.po4),
+          borderColor: '#f472b6',
+          borderWidth: 2,
+          tension: 0.3,
+          yAxisID: 'y-po4',
+          pointRadius: 2
+        }
+      ]
+    },
+    options: getNutrientOptions()
+  });
+  
+  // pH
+  new Chart(document.getElementById('phChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'pH',
+        data: readings.map(r => r.ph),
+        borderColor: '#4da6ff',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 2
+      }]
+    },
+    options: getChartOptions('pH', targets.ph.min, targets.ph.max, '#4da6ff')
+  });
+}
+
+function getChartOptions(label, min, max, color) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(10,14,26,0.95)',
+        titleColor: '#f8fafc',
+        bodyColor: '#e2e8f0',
+        borderColor: color,
+        borderWidth: 1
+      }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: 'day', displayFormats: { day: 'MMM d' } },
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#64748b', font: { size: 9 } }
+      },
+      y: {
+        title: { display: true, text: label, color, font: { size: 11, weight: 600 } },
+        grid: { color: 'rgba(255,255,255,0.03)' },
+        ticks: { color, font: { size: 10 } }
+      }
+    }
+  };
+}
+
+function getDualAxisOptions() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { size: 10 }, usePointStyle: true } }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: 'day', displayFormats: { day: 'MMM d' } },
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#64748b', font: { size: 9 } }
+      },
+      'y-ca': {
+        position: 'left',
+        title: { display: true, text: 'Calcium (mg/L)', color: '#ff6b35', font: { size: 11, weight: 600 } },
+        grid: { color: 'rgba(255,255,255,0.03)' },
+        ticks: { color: '#ff6b35', font: { size: 10 } }
+      },
+      'y-alk': {
+        position: 'right',
+        title: { display: true, text: 'Alkalinity (dKH)', color: '#00d4aa', font: { size: 11, weight: 600 } },
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#00d4aa', font: { size: 10 } }
+      }
+    }
+  };
+}
+
+function getNutrientOptions() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { size: 10 }, usePointStyle: true } }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: 'day', displayFormats: { day: 'MMM d' } },
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#64748b', font: { size: 9 } }
+      },
+      'y-no3': {
+        position: 'left',
+        title: { display: true, text: 'Nitrate (ppm)', color: '#a78bfa', font: { size: 11, weight: 600 } },
+        grid: { color: 'rgba(255,255,255,0.03)' },
+        ticks: { color: '#a78bfa', font: { size: 10 } }
+      },
+      'y-po4': {
+        position: 'right',
+        title: { display: true, text: 'Phosphate (ppm)', color: '#f472b6', font: { size: 11, weight: 600 } },
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#f472b6', font: { size: 10 } }
+      }
+    }
+  };
+}
+
+// ================================================================
+// AI ANALYSIS
+// ================================================================
+document.getElementById('analyze-btn').addEventListener('click', async () => {
+  if (!tankData.id) {
+    alert('Analysis is not available in demo mode. Connect your tank to use AI analysis.');
+    return;
+  }
+  
+  ReefMind.UI.showLoading('Analyzing your tank...');
+  
+  const result = await ReefMind.API.analyzeTank(tankData.id);
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!result.ok) {
+    alert('Analysis failed: ' + (result.error || 'Unknown error'));
+    return;
+  }
+  
+  const analysis = result.data.analysis;
+  
+  document.getElementById('analysis-date').textContent = 'Just now';
+  document.getElementById('diagnosis-content').innerHTML = analysis.summary || 'Analysis complete. Check your parameters for trends.';
+});
+
+// ================================================================
+// ADD EVENT MODAL
+// ================================================================
+function openEventModal() {
+  document.getElementById('event-date').valueAsDate = new Date();
+  document.getElementById('event-modal').classList.add('active');
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').classList.remove('active');
+  document.getElementById('event-form').reset();
+  ReefMind.UI.hideError('event-error');
+}
+
+document.getElementById('add-event-btn').addEventListener('click', openEventModal);
+
+// Close modal on outside click
+document.getElementById('event-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'event-modal') closeEventModal();
+});
+
+// Close modal on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeEventModal();
+});
+
+document.getElementById('event-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const type = document.getElementById('event-type').value;
+  const date = document.getElementById('event-date').value;
+  const title = document.getElementById('event-title').value.trim();
+  const details = document.getElementById('event-details').value.trim();
+  
+  if (!tankData.id) {
+    alert('Events cannot be saved in demo mode.');
+    closeEventModal();
+    return;
+  }
+  
+  ReefMind.UI.showLoading('Saving event...');
+  
+  const result = await ReefMind.API.addEvent(tankData.id, {
+    type,
+    date: new Date(date).toISOString(),
+    title,
+    details
+  });
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!result.ok) {
+    ReefMind.UI.showError('event-error', result.error || 'Failed to save event');
+    return;
+  }
+  
+  // Reload timeline
+  const eventsResult = await ReefMind.API.getEvents(tankData.id);
+  if (eventsResult.ok) {
+    events = eventsResult.data.events;
+    renderTimeline();
+  }
+  
+  closeEventModal();
+});
+
+// ================================================================
+// LOGOUT
+// ================================================================
+document.getElementById('logout-btn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to sign out?')) {
+    ReefMind.Nav.logout();
+  }
+});
+
+// ================================================================
+// SETTINGS (TODO)
+// ================================================================
+document.getElementById('settings-btn').addEventListener('click', () => {
+  alert('Settings panel coming soon! For now, you can manage your tank settings via the API.');
+});
+
+// ================================================================
+// INIT
+// ================================================================
+loadDashboard();
+</script>
+
+</body>
+</html>

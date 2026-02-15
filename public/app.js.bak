@@ -1,0 +1,450 @@
+/**
+ * ReefMind Beta — Frontend App Core
+ * API client, router, state management, utilities
+ */
+
+// ================================================================
+// CONFIGURATION
+// ================================================================
+const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+  ? 'http://localhost:8080'
+  : window.location.origin;
+
+// ================================================================
+// STATE MANAGEMENT
+// ================================================================
+const AppState = {
+  user: null,
+  token: null,
+  currentTank: null,
+  tanks: [],
+  
+  init() {
+    this.token = localStorage.getItem('reefmind_token');
+    const userStr = localStorage.getItem('reefmind_user');
+    if (userStr) {
+      try {
+        this.user = JSON.parse(userStr);
+      } catch (e) {
+        console.error('Failed to parse user from localStorage');
+      }
+    }
+  },
+  
+  setAuth(user, token) {
+    this.user = user;
+    this.token = token;
+    localStorage.setItem('reefmind_token', token);
+    localStorage.setItem('reefmind_user', JSON.stringify(user));
+  },
+  
+  clearAuth() {
+    this.user = null;
+    this.token = null;
+    this.currentTank = null;
+    this.tanks = [];
+    localStorage.removeItem('reefmind_token');
+    localStorage.removeItem('reefmind_user');
+  },
+  
+  isAuthenticated() {
+    return !!(this.token && this.user);
+  }
+};
+
+// Initialize on load
+AppState.init();
+
+// ================================================================
+// API CLIENT
+// ================================================================
+const API = {
+  async request(endpoint, options = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+    
+    if (AppState.token) {
+      headers['Authorization'] = `Bearer ${AppState.token}`;
+    }
+    
+    const config = {
+      ...options,
+      headers
+    };
+    
+    try {
+      const response = await fetch(`${API_BASE}${endpoint}`, config);
+      
+      // Try to parse JSON, fallback gracefully
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const text = await response.text().catch(() => 'Unknown error');
+        throw new Error(text || 'Server error — please try again');
+      }
+      
+      if (!response.ok) {
+        return { ok: false, error: data.error || 'Request failed', status: response.status };
+      }
+      
+      return { ok: true, data };
+    } catch (error) {
+      console.error('API request failed:', error);
+      return { ok: false, error: error.message || 'Network error' };
+    }
+  },
+  
+  // Auth
+  async register(name, email, password) {
+    return this.request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password })
+    });
+  },
+  
+  async login(email, password) {
+    return this.request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+  
+  async getProfile() {
+    return this.request('/api/auth/me');
+  },
+  
+  // Tanks
+  async createTank(tankData) {
+    return this.request('/api/tanks', {
+      method: 'POST',
+      body: JSON.stringify(tankData)
+    });
+  },
+  
+  async getTanks() {
+    return this.request('/api/tanks');
+  },
+  
+  async getTank(tankId) {
+    return this.request(`/api/tanks/${tankId}`);
+  },
+  
+  async updateTank(tankId, updates) {
+    return this.request(`/api/tanks/${tankId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+  
+  // Apex integration
+  async connectApex(tankId, fusionEmail, fusionPassword) {
+    return this.request(`/api/tanks/${tankId}/connect-apex`, {
+      method: 'POST',
+      body: JSON.stringify({ fusionEmail, fusionPassword })
+    });
+  },
+  
+  async syncApex(tankId) {
+    return this.request(`/api/tanks/${tankId}/sync`);
+  },
+  
+  // Readings
+  async getReadings(tankId, days = 30) {
+    return this.request(`/api/tanks/${tankId}/readings?days=${days}`);
+  },
+  
+  async addReading(tankId, readingData) {
+    return this.request(`/api/tanks/${tankId}/readings`, {
+      method: 'POST',
+      body: JSON.stringify(readingData)
+    });
+  },
+  
+  // Events
+  async getEvents(tankId, limit = 50) {
+    return this.request(`/api/tanks/${tankId}/events?limit=${limit}`);
+  },
+  
+  async addEvent(tankId, eventData) {
+    return this.request(`/api/tanks/${tankId}/events`, {
+      method: 'POST',
+      body: JSON.stringify(eventData)
+    });
+  },
+  
+  // Analysis
+  async analyzeTank(tankId) {
+    return this.request(`/api/tanks/${tankId}/analyze`, {
+      method: 'POST'
+    });
+  },
+  
+  async getAnalyses(tankId, limit = 10) {
+    return this.request(`/api/tanks/${tankId}/analyses?limit=${limit}`);
+  }
+};
+
+// ================================================================
+// UI UTILITIES
+// ================================================================
+const UI = {
+  showLoading(message = 'Loading...') {
+    let overlay = document.querySelector('.loading-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = `
+        <div class="spinner"></div>
+        <div class="loading-text">${message}</div>
+      `;
+      document.body.appendChild(overlay);
+    } else {
+      overlay.querySelector('.loading-text').textContent = message;
+    }
+    
+    setTimeout(() => overlay.classList.add('active'), 10);
+  },
+  
+  hideLoading() {
+    const overlay = document.querySelector('.loading-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+  },
+  
+  showError(elementId, message) {
+    const errorEl = document.getElementById(elementId);
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.classList.add('active');
+    }
+  },
+  
+  hideError(elementId) {
+    const errorEl = document.getElementById(elementId);
+    if (errorEl) {
+      errorEl.classList.remove('active');
+    }
+  },
+  
+  clearErrors() {
+    document.querySelectorAll('.form-error').forEach(el => {
+      el.classList.remove('active');
+    });
+  }
+};
+
+// ================================================================
+// MOCK DATA FALLBACK
+// ================================================================
+const MockData = {
+  // Current readings (simulated)
+  currentReadings: {
+    alk: 7.2,
+    ca: 438,
+    mg: 1320,
+    ph: 8.15,
+    temp: 77.8,
+    no3: 8.5,
+    po4: 0.07
+  },
+  
+  // 30 days of readings (simulated)
+  generateReadings(days = 30) {
+    const readings = [];
+    const now = new Date();
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      
+      // Noisy data like real Trident
+      const reading = {
+        timestamp: date.toISOString(),
+        source: 'trident',
+        alk: 7.2 + (Math.random() - 0.5) * 0.3 - (i < 15 ? (15 - i) * 0.05 : 0),
+        ca: 438 + (Math.random() - 0.5) * 10 + (i < 15 ? (15 - i) * 3 : 0),
+        mg: 1320 + (Math.random() - 0.5) * 20,
+        ph: 8.15 + (Math.random() - 0.5) * 0.15,
+        temp: 77.8 + (Math.random() - 0.5) * 0.4,
+        no3: 8.5 + (Math.random() - 0.5) * 1.5,
+        po4: 0.07 + (Math.random() - 0.5) * 0.02
+      };
+      
+      readings.push(reading);
+    }
+    
+    return readings;
+  },
+  
+  // Recent events
+  events: [
+    {
+      id: 'evt1',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      type: 'dosing-change',
+      title: 'All4Reef reduced 210→160 mL/day',
+      details: 'Calcium was too high (546 mg/L)',
+      relatedParams: ['ca', 'alk']
+    },
+    {
+      id: 'evt2',
+      date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+      type: 'treatment',
+      title: 'Dino treatment started',
+      details: 'Macrobacter7 (dinoflagellate control)',
+      relatedParams: ['no3', 'po4']
+    },
+    {
+      id: 'evt3',
+      date: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+      type: 'dosing-change',
+      title: 'Urea added to ammonium mix',
+      details: '25 mL/day pump 27_1',
+      relatedParams: ['no3', 'alk']
+    },
+    {
+      id: 'evt4',
+      date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+      type: 'icp-result',
+      title: 'ICP Test uploaded',
+      details: 'Ca: 458, Alk: 8.2, Mg: 1350 — all in range',
+      relatedParams: ['ca', 'alk', 'mg']
+    }
+  ],
+  
+  // Tank config
+  tank: {
+    id: 'demo-tank',
+    name: 'Main Reef',
+    volume: 240,
+    type: 'mixed-reef',
+    targets: {
+      alk: { min: 7.5, max: 9.0, unit: 'dKH' },
+      ca: { min: 400, max: 450, unit: 'mg/L' },
+      mg: { min: 1300, max: 1400, unit: 'mg/L' },
+      ph: { min: 8.0, max: 8.5 },
+      no3: { min: 2, max: 10, unit: 'ppm' },
+      po4: { min: 0.03, max: 0.10, unit: 'ppm' },
+      temp: { min: 76, max: 80, unit: '°F' }
+    },
+    equipment: {
+      probes: ['pH', 'Temp', 'ORP'],
+      trident: true,
+      ato: true,
+      outlets: [
+        { id: '26_2', userLabel: 'All4Reef', product: 'all4reef', type: 'dosing' },
+        { id: '27_2', userLabel: 'Kalkwasser', product: 'kalkwasser', type: 'dosing' }
+      ]
+    }
+  }
+};
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+const Nav = {
+  goto(page) {
+    window.location.href = page;
+  },
+  
+  logout() {
+    AppState.clearAuth();
+    this.goto('index.html');
+  },
+  
+  requireAuth() {
+    if (!AppState.isAuthenticated()) {
+      this.goto('index.html');
+      return false;
+    }
+    return true;
+  }
+};
+
+// ================================================================
+// DATE/TIME UTILITIES
+// ================================================================
+const DateUtils = {
+  formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  },
+  
+  formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+    const dateOptions = { month: 'short', day: 'numeric' };
+    const timeOptions = { hour: 'numeric', minute: '2-digit' };
+    return `${date.toLocaleDateString('en-US', dateOptions)}, ${date.toLocaleTimeString('en-US', timeOptions)}`;
+  },
+  
+  generateDateLabels(days) {
+    const dates = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      dates.push(date);
+    }
+    return dates;
+  }
+};
+
+// ================================================================
+// PARAMETER COLOR CODING
+// ================================================================
+const ParamUtils = {
+  getStatus(value, min, max) {
+    if (value < min) return 'low';
+    if (value > max) return 'high';
+    return 'good';
+  },
+  
+  getStatusColor(status) {
+    switch (status) {
+      case 'good': return 'var(--green)';
+      case 'low': return 'var(--yellow)';
+      case 'high': return 'var(--red)';
+      default: return 'var(--text-dim)';
+    }
+  },
+  
+  formatValue(param, value) {
+    if (value === null || value === undefined) return '—';
+    
+    switch (param) {
+      case 'alk':
+        return `${value.toFixed(1)} dKH`;
+      case 'ca':
+      case 'mg':
+        return `${Math.round(value)} mg/L`;
+      case 'ph':
+        return value.toFixed(2);
+      case 'temp':
+        return `${value.toFixed(1)}°F`;
+      case 'no3':
+        return `${value.toFixed(1)} ppm`;
+      case 'po4':
+        return `${value.toFixed(2)} ppm`;
+      default:
+        return value.toString();
+    }
+  }
+};
+
+// ================================================================
+// EXPORT FOR GLOBAL ACCESS
+// ================================================================
+window.ReefMind = {
+  API,
+  AppState,
+  UI,
+  Nav,
+  MockData,
+  DateUtils,
+  ParamUtils
+};

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ReefMind Beta — Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .onboard-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .step-card {
+    display: none;
+  }
+  
+  .step-card.active {
+    display: block;
+  }
+  
+  .step-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+  
+  .step-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  
+  .controller-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  .controller-btn {
+    padding: 24px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  
+  .controller-btn.active {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+  
+  .controller-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .controller-btn:not(.disabled):hover {
+    border-color: var(--border-glow);
+  }
+  
+  .controller-btn .emoji {
+    font-size: 3rem;
+    margin-bottom: 12px;
+  }
+  
+  .controller-btn .name {
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  
+  .controller-btn .status {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  
+  .privacy-notice {
+    background: var(--blue-dim);
+    border-left: 3px solid var(--blue);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  
+  .discovery-list {
+    margin-bottom: 24px;
+  }
+  
+  .discovery-item {
+    padding: 16px;
+    background: var(--bg-deep);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+  }
+  
+  .discovery-label {
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  
+  .discovery-value {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  
+  .success-icon {
+    text-align: center;
+    font-size: 4rem;
+    margin-bottom: 24px;
+    animation: bounceIn 0.6s ease;
+  }
+  
+  @keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  .nav-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  
+  @media (max-width: 640px) {
+    .controller-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-orbs">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>🐠 ReefMind Setup</h1>
+      <div class="subtitle">Let's get your tank connected</div>
+    </div>
+  </div>
+</header>
+
+<!-- Main container -->
+<div class="onboard-container">
+  
+  <!-- Progress Bar -->
+  <div class="progress-bar">
+    <div class="progress-step" data-step="1"></div>
+    <div class="progress-step" data-step="2"></div>
+    <div class="progress-step" data-step="3"></div>
+    <div class="progress-step" data-step="4"></div>
+  </div>
+  
+  <!-- ================================================================
+       STEP 1: CONTROLLER SELECTION
+       ================================================================ -->
+  <div class="card step-card active" id="step-1">
+    <div class="step-title">What controller do you have?</div>
+    <div class="step-subtitle">
+      ReefMind connects to your aquarium controller to automatically track your water parameters.
+    </div>
+    
+    <div class="controller-grid">
+      <div class="controller-btn" data-controller="apex">
+        <div class="emoji">🔵</div>
+        <div class="name">Neptune Apex</div>
+        <div class="status">Supported</div>
+      </div>
+      
+      <div class="controller-btn disabled">
+        <div class="emoji">⬜</div>
+        <div class="name">GHL</div>
+        <div class="status">Coming Soon</div>
+      </div>
+      
+      <div class="controller-btn disabled">
+        <div class="emoji">⬜</div>
+        <div class="name">Hydros</div>
+        <div class="status">Coming Soon</div>
+      </div>
+      
+      <div class="controller-btn disabled">
+        <div class="emoji">📝</div>
+        <div class="name">No Controller</div>
+        <div class="status">Manual Entry</div>
+      </div>
+    </div>
+    
+    <div class="nav-buttons">
+      <button class="btn btn-primary btn-full" id="step1-next" disabled>
+        Continue
+      </button>
+    </div>
+  </div>
+  
+  <!-- ================================================================
+       STEP 2: APEX FUSION LOGIN
+       ================================================================ -->
+  <div class="card step-card" id="step-2">
+    <div class="step-title">Connect to Apex Fusion</div>
+    <div class="step-subtitle">
+      Sign in with your Apex Fusion account to automatically sync your tank data.
+    </div>
+    
+    <div class="privacy-notice">
+      🔒 <strong>Privacy:</strong> We only read your data — we never change settings or control your equipment.
+    </div>
+    
+    <form id="fusion-form">
+      <div class="form-group">
+        <label class="form-label" for="fusion-email">Apex Fusion Email</label>
+        <input 
+          type="email" 
+          id="fusion-email" 
+          class="form-input" 
+          placeholder="your@email.com" 
+          required
+        >
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="fusion-password">Apex Fusion Password</label>
+        <input 
+          type="password" 
+          id="fusion-password" 
+          class="form-input" 
+          placeholder="••••••••" 
+          required
+        >
+      </div>
+      
+      <div id="fusion-error" class="form-error"></div>
+      
+      <div class="nav-buttons">
+        <button type="button" class="btn btn-secondary" id="step2-back">
+          Back
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          Connect
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- ================================================================
+       STEP 3: AUTO-DISCOVERY & CONFIG
+       ================================================================ -->
+  <div class="card step-card" id="step-3">
+    <div class="step-title">Here's what we found</div>
+    <div class="step-subtitle">
+      ReefMind detected your equipment. Confirm everything looks correct, then customize your settings below.
+    </div>
+    
+    <div class="discovery-list" id="discovery-results">
+      <!-- Populated dynamically -->
+    </div>
+    
+    <form id="config-form">
+      <div class="form-group">
+        <label class="form-label" for="tank-name">Tank Name</label>
+        <input 
+          type="text" 
+          id="tank-name" 
+          class="form-input" 
+          value="Main Reef"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="tank-volume">Tank Volume (gallons)</label>
+        <input 
+          type="number" 
+          id="tank-volume" 
+          class="form-input" 
+          placeholder="240"
+          min="1"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="tank-type">Tank Type</label>
+        <select id="tank-type" class="form-select">
+          <option value="mixed-reef">Mixed Reef</option>
+          <option value="sps-dominant">SPS Dominant</option>
+          <option value="lps-softies">LPS & Softies</option>
+          <option value="fowlr">Fish Only (FOWLR)</option>
+        </select>
+      </div>
+      
+      <div class="nav-buttons">
+        <button type="button" class="btn btn-secondary" id="step3-back">
+          Back
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+          Confirm
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- ================================================================
+       STEP 4: ALL SET!
+       ================================================================ -->
+  <div class="card step-card" id="step-4">
+    <div class="success-icon">🎉</div>
+    
+    <div class="step-title" style="text-align: center;">You're all set!</div>
+    <div class="step-subtitle" style="text-align: center;">
+      ReefMind is now monitoring your tank. Your first AI analysis will be ready once we have 24 hours of data.
+    </div>
+    
+    <div class="nav-buttons">
+      <button class="btn btn-primary btn-full" id="goto-dashboard">
+        Go to Dashboard
+      </button>
+    </div>
+  </div>
+  
+</div>
+
+<!-- Scripts -->
+<script src="app.js"></script>
+<script>
+// ================================================================
+// STATE
+// ================================================================
+let currentStep = 1;
+let selectedController = null;
+let tankData = {
+  fusionEmail: '',
+  fusionPassword: '',
+  apexConfig: null,
+  tankId: null
+};
+
+// ================================================================
+// AUTH CHECK
+// ================================================================
+if (!ReefMind.Nav.requireAuth()) {
+  // Will redirect to login
+}
+
+// ================================================================
+// STEP NAVIGATION
+// ================================================================
+function updateProgress() {
+  document.querySelectorAll('.progress-step').forEach((step, index) => {
+    if (index < currentStep) {
+      step.classList.add('active');
+    } else {
+      step.classList.remove('active');
+    }
+  });
+}
+
+function goToStep(step) {
+  document.querySelectorAll('.step-card').forEach(card => card.classList.remove('active'));
+  document.getElementById(`step-${step}`).classList.add('active');
+  currentStep = step;
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+// ================================================================
+// STEP 1: CONTROLLER SELECTION
+// ================================================================
+document.querySelectorAll('.controller-btn:not(.disabled)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.controller-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedController = btn.dataset.controller;
+    document.getElementById('step1-next').disabled = false;
+  });
+});
+
+document.getElementById('step1-next').addEventListener('click', () => {
+  if (selectedController === 'apex') {
+    goToStep(2);
+  }
+});
+
+// ================================================================
+// STEP 2: APEX FUSION LOGIN
+// ================================================================
+document.getElementById('step2-back').addEventListener('click', () => goToStep(1));
+
+document.getElementById('fusion-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('fusion-email').value.trim();
+  const password = document.getElementById('fusion-password').value;
+  
+  ReefMind.UI.hideError('fusion-error');
+  ReefMind.UI.showLoading('Connecting to Apex Fusion...');
+  
+  // First, create a tank
+  const tankResult = await ReefMind.API.createTank({
+    name: 'Main Reef',
+    volume: 100, // Placeholder — will update in step 3
+    type: 'mixed-reef'
+  });
+  
+  if (!tankResult.ok) {
+    ReefMind.UI.hideLoading();
+    ReefMind.UI.showError('fusion-error', tankResult.error || 'Failed to create tank');
+    return;
+  }
+  
+  tankData.tankId = tankResult.data.tank.id;
+  
+  // Connect Apex
+  const connectResult = await ReefMind.API.connectApex(tankData.tankId, email, password);
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!connectResult.ok) {
+    let errorMsg = connectResult.error || 'Connection failed';
+    if (errorMsg.includes('password') || errorMsg.includes('credentials')) {
+      errorMsg = "That didn't work. Double-check your Apex Fusion password.";
+    } else if (errorMsg.includes('devices') || errorMsg.includes('not found')) {
+      errorMsg = "We couldn't find any Apex devices on your Fusion account.";
+    } else if (errorMsg.includes('reach') || errorMsg.includes('network')) {
+      errorMsg = "We couldn't reach Apex Fusion. Try again in a minute.";
+    }
+    
+    ReefMind.UI.showError('fusion-error', errorMsg);
+    return;
+  }
+  
+  // Store config
+  tankData.apexConfig = connectResult.data.config;
+  tankData.fusionEmail = email;
+  tankData.fusionPassword = password;
+  
+  // Populate discovery results
+  populateDiscovery(connectResult.data.config);
+  
+  goToStep(3);
+});
+
+// ================================================================
+// STEP 3: AUTO-DISCOVERY & CONFIG
+// ================================================================
+function populateDiscovery(config) {
+  const resultsDiv = document.getElementById('discovery-results');
+  
+  let html = '';
+  
+  if (config.name) {
+    html += `
+      <div class="discovery-item">
+        <div class="discovery-label">Tank Name</div>
+        <div class="discovery-value">${config.name || 'Main Reef'}</div>
+      </div>
+    `;
+    document.getElementById('tank-name').value = config.name || 'Main Reef';
+  }
+  
+  if (config.equipment) {
+    if (config.equipment.probes && config.equipment.probes.length > 0) {
+      html += `
+        <div class="discovery-item">
+          <div class="discovery-label">Probes Detected</div>
+          <div class="discovery-value">${config.equipment.probes.join(', ')}</div>
+        </div>
+      `;
+    }
+    
+    html += `
+      <div class="discovery-item">
+        <div class="discovery-label">Trident (Alk/Ca/Mg Testing)</div>
+        <div class="discovery-value">${config.equipment.trident ? '✅ Yes' : '❌ Not detected'}</div>
+      </div>
+    `;
+    
+    if (config.equipment.outlets && config.equipment.outlets.length > 0) {
+      const dosingPumps = config.equipment.outlets.filter(o => o.type === 'dosing');
+      html += `
+        <div class="discovery-item">
+          <div class="discovery-label">Dosing Pumps</div>
+          <div class="discovery-value">${dosingPumps.length} pump${dosingPumps.length !== 1 ? 's' : ''} detected</div>
+        </div>
+      `;
+    }
+  }
+  
+  resultsDiv.innerHTML = html;
+}
+
+document.getElementById('step3-back').addEventListener('click', () => goToStep(2));
+
+document.getElementById('config-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const name = document.getElementById('tank-name').value.trim();
+  const volume = parseInt(document.getElementById('tank-volume').value) || 100;
+  const type = document.getElementById('tank-type').value;
+  
+  ReefMind.UI.showLoading('Saving configuration...');
+  
+  // Update tank
+  const updateResult = await ReefMind.API.updateTank(tankData.tankId, {
+    name,
+    volume,
+    type
+  });
+  
+  ReefMind.UI.hideLoading();
+  
+  if (!updateResult.ok) {
+    alert('Failed to save configuration. Please try again.');
+    return;
+  }
+  
+  goToStep(4);
+});
+
+// ================================================================
+// STEP 4: COMPLETE
+// ================================================================
+document.getElementById('goto-dashboard').addEventListener('click', () => {
+  window.location.href = 'dashboard.html';
+});
+
+// ================================================================
+// INIT
+// ================================================================
+updateProgress();
+</script>
+
+</body>
+</html>

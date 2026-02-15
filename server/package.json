@@ -1,0 +1,19 @@
+{
+  "name": "reefmind-server",
+  "version": "1.0.0-beta",
+  "description": "ReefMind embedded server",
+  "main": "server.js",
+  "dependencies": {
+    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/vertexai": "^1.9.0",
+    "@google/generative-ai": "^0.21.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2"
+  }
+}

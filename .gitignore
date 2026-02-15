@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.dmg
+.DS_Store
+.env
+build/
+*.exe
+*.msi
+*.zip
+.cache/
